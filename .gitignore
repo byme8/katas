@@ -4,5 +4,6 @@ obj
 .vscode
 .vs
 .idea
+.zig-cache
 *.suo
 *.user
