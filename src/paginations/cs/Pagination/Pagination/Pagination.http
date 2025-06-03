@@ -1,0 +1,14 @@
+@Host = http://localhost:10000
+
+GET {{Host}}/users
+Accept: application/json
+
+###
+
+GET {{Host}}/users/2/comments
+Accept: application/json
+
+###
+
+GET {{Host}}/users/2/comments/offset?page=10&size=10
+Accept: application/json
