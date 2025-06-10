@@ -1,14 +1,49 @@
 @Host = http://localhost:10000
+@userId = 683f3523d4506ce1a0d4e394
 
 GET {{Host}}/users
 Accept: application/json
 
 ###
-
-GET {{Host}}/users/2/comments
+GET {{Host}}/users/{{userId}}/comments
 Accept: application/json
+
+
 
 ###
-
-GET {{Host}}/users/2/comments/offset?page=10&size=10
+# Note: Replace {userId} with an actual MongoDB ObjectId from the /users response
+POST {{Host}}/comments/offset
 Accept: application/json
+Content-Type: application/json
+
+{
+  "page": 1,
+  "size": 10,
+  "ordering": [
+    {
+      "orderBy": "CREATED_AT",
+      "direction": "DESC"
+    }
+  ]
+}
+
+###
+# Offset-based pagination
+POST {{Host}}/users/{{userId}}/comments/offset
+Accept: application/json
+Content-Type: application/json
+
+{
+  "page": 100,
+  "size": 10,
+  "ordering": [
+    {
+      "orderBy": "CREATED_AT",
+      "direction": "DESC"
+    },
+    {
+      "orderBy": "UPDATED_AT",
+      "direction": "DESC"
+    }
+  ]
+}

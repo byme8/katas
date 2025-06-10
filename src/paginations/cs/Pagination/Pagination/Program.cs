@@ -1,40 +1,45 @@
-using Bogus;
-using Microsoft.EntityFrameworkCore;
-using Pagination;
+using System.Text.Json.Serialization;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using Pagination.Data;
-using Pagination.Data.Entities;
+using Pagination.Json;
+using Pagination.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 
-services.AddDbContext<PaginationDbContext>();
+builder.AddServiceDefaults();
+builder.AddMongoDBClient("paginationdb");
+
+services.ConfigureHttpJsonOptions(o =>
+{
+    o.SerializerOptions.Converters.Add(new JsonStringEnumConverterProvider());
+});
+
+services.AddScoped<PaginationMongoContext>();
+services.AddScoped<CommentsService>();
+services.AddHostedService<DatabaseSeedingService>();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+app.MapDefaultEndpoints();
+
+app.MapGet("/users", async (PaginationMongoContext context) =>
 {
-    var context = scope.ServiceProvider.GetRequiredService<PaginationDbContext>();
-    context.Database.EnsureCreated();
-}
+    var users = await context.Users
+        .Find(u => !u.IsDeleted)
+        .ToListAsync();
+    return users;
+});
 
-app.MapGet("/users", async (PaginationDbContext context) => await context.Agents.ToArrayAsync());
-app.MapGet("/users/{userId}/comments", async (int userId, PaginationDbContext context) => await context
-    .Customers
-    .Where(o => o.UserId == userId)
-    .ToArrayAsync());
+app.MapGet("/users/{userId}/comments", async (string userId, PaginationMongoContext context) =>
+{
+    var comments = await context.Comments
+        .Find(c => c.UserId == ObjectId.Parse(userId) && !c.IsDeleted)
+        .ToListAsync();
+    return comments;
+});
 
-app.MapGet("/users/{userId}/comments/offset", async (int userId, int page, int size, PaginationDbContext context) => await context
-    .Customers
-    .Where(o => o.UserId == userId)
-    .Skip((page - 1) * size)
-    .Take(size)
-    .ToArrayAsync());
-
+app.MapComments();
 
 app.Run();
-
-
-namespace Pagination
-{
-    record User(int Id, string FirstName, string LastName, string Email);
-}
