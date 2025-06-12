@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using Apparatus.AOT.Reflection;
 
@@ -15,9 +15,8 @@ public enum SortDirection
     Descending
 }
 
-public class OffsetPaginationRequest<TOrderBy, TOrder>
+public class OffsetPaginationRequest<TOrderBy>
     where TOrderBy : Enum
-    where TOrder : Enum
 {
     [Required]
     public int Page { get; set; }
@@ -25,14 +24,7 @@ public class OffsetPaginationRequest<TOrderBy, TOrder>
     [Required]
     public int Size { get; set; }
     
-    [Required]
-    public Sorting<TOrderBy, TOrder>[]? Ordering { get; set; }
-}
-
-public class Sorting<TOrderBy, TOrder>
-{
-    [Required]
     public TOrderBy OrderBy { get; set; }
-    [Required]
-    public TOrder Direction { get; set; }
+    
+    public SortDirection Direction { get; set; } = SortDirection.Descending;
 }

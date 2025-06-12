@@ -1,12 +1,14 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var mongo = builder.AddMongoDB("mongodb")
+var password = builder.AddParameter("postgres-password", secret: true);
+var postgres = builder.AddPostgres("postgres", password: password)
+    .WithHostPort(5432)
     .WithDataVolume()
-    .WithEndpoint(27017, 27017, name: "mongodb")
+    .WithPgAdmin()
     .AddDatabase("paginationdb");
 
 builder.AddProject<Projects.Pagination>("pagination")
-    .WithReference(mongo)
-    .WaitFor(mongo);
+    .WithReference(postgres)
+    .WaitFor(postgres);
 
 builder.Build().Run();

@@ -6,7 +6,7 @@ public static class CommentsHandler
 {
     public static void MapComments(this WebApplication app)
     {
-        app.MapPost("/users/{userId}/comments/offset", async (string userId, [FromBody]OffsetPaginationRequest<CommentSortField, SortDirection> request, CommentsService context) =>
+        app.MapPost("/users/{userId}/comments/offset", async (Guid userId, [FromBody]OffsetPaginationRequest<CommentSortField> request, CommentsOffsetService context) =>
         {
             var validationErrors = request.Validate();
             if (validationErrors.Count > 0)
@@ -19,7 +19,7 @@ public static class CommentsHandler
             return Results.Ok(comments);
         });
         
-        app.MapPost("/comments/offset", async ([FromBody]OffsetPaginationRequest<CommentSortField, SortDirection> request, CommentsService context) =>
+        app.MapPost("/comments/offset", async ([FromBody]OffsetPaginationRequest<CommentSortField> request, CommentsOffsetService context) =>
         {
             var validationErrors = request.Validate();
             if (validationErrors.Count > 0)
