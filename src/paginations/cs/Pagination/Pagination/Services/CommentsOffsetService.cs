@@ -26,15 +26,17 @@ public class CommentsOffsetService(PaginationDbContext context)
         var orderBy = offset.OrderBy;
         var direction = offset.Direction;
 
-        var orderByClause = BuildOrderByClause(orderBy, direction);
-        var offsetValue = (page - 1) * size;
+        var orderByClause = CreateOrdeByClause(orderBy, direction);
+        var countQuery = CreateCountOverClause(offset);
+        var userClause = CreateUserClause(userId);
 
+        var offsetValue = (page - 1) * size;
         var sql = $"""
-                   SELECT c."Id", c."UserId", c."Message", c."CreatedAt", c."UpdatedAt", c."DeletedAt", c."IsDeleted",
-                          COUNT(*) OVER() as TotalCount
+                   SELECT c."Id", c."UserId", c."Message", c."CreatedAt", c."UpdatedAt", c."DeletedAt", c."IsDeleted"
+                          {countQuery}
                    FROM "Comments" c
                    WHERE c."IsDeleted" = false
-                   {(userId.HasValue ? @"AND c.""UserId"" = @UserId" : string.Empty)}
+                   {userClause}
                    {orderByClause}
                    LIMIT @Size OFFSET @Offset
                    """;
@@ -44,37 +46,49 @@ public class CommentsOffsetService(PaginationDbContext context)
         {
             parameters.Add("UserId", userId.Value);
         }
+
         parameters.Add("Size", size);
         parameters.Add("Offset", offsetValue);
 
         var connection = context.Database.GetDbConnection();
-        
+
         var results = await connection.QueryAsync<CommentWithCount>(sql, parameters);
         var resultsList = results.ToList();
 
-        var totalCount = resultsList.FirstOrDefault()?.TotalCount ?? 0;
-        var comments = resultsList.Select(r => new Comment
-        {
-            Id = r.Id,
-            UserId = r.UserId,
-            Message = r.Message,
-            CreatedAt = r.CreatedAt,
-            UpdatedAt = r.UpdatedAt,
-            IsDeleted = r.IsDeleted,
-            DeletedAt = r.DeletedAt
-        }).ToList();
+        var totalCount = !offset.SkipCount ? resultsList.FirstOrDefault()?.TotalCount ?? 0 : (long?)null;
+        var comments = resultsList
+            .Select(r => new Comment
+            {
+                Id = r.Id,
+                UserId = r.UserId,
+                Message = r.Message,
+                CreatedAt = r.CreatedAt,
+                UpdatedAt = r.UpdatedAt,
+                IsDeleted = r.IsDeleted,
+                DeletedAt = r.DeletedAt
+            })
+            .ToArray();
 
         return new OffsetPaginationResponse<Comment>
         {
             Data = comments,
-            Page = page,
-            Size = size,
-            TotalCount = totalCount,
-            TotalPages = (int)Math.Ceiling(totalCount / (double)size)
+            Metadata = new PaginationMetadata
+            {
+                CurrentPage = page,
+                PageSize = size,
+                TotalCount = totalCount,
+                TotalPages = totalCount.HasValue ? (int)Math.Ceiling(totalCount.Value / (double)size) : null,
+            }
         };
     }
 
-    private string BuildOrderByClause(CommentSortField orderBy, SortDirection direction)
+    private string CreateUserClause(Guid? userId)
+        => userId.HasValue ? @"AND c.""UserId"" = @UserId" : string.Empty;
+
+    private static string CreateCountOverClause(OffsetPaginationRequest<CommentSortField> offset)
+        => !offset.SkipCount ? ", COUNT(*) OVER() as TotalCount" : string.Empty;
+
+    private string CreateOrdeByClause(CommentSortField orderBy, SortDirection direction)
     {
         var column = orderBy switch
         {
@@ -91,12 +105,10 @@ public class CommentsOffsetService(PaginationDbContext context)
             _ => "DESC" // Default fallback
         };
 
-        // Always include Id for stable sorting
         return $"ORDER BY {column} {sortDirection}, c.\"Id\" ASC";
     }
 }
 
-// DTO for raw SQL query results
 internal class CommentWithCount
 {
     public Guid Id { get; set; }

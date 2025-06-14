@@ -31,5 +31,12 @@ public static class CommentsHandler
             
             return Results.Ok(comments);
         });
+        
+        app.MapGet("/comments/all", async (CommentsService commentsService) =>
+        {
+            var (comments, count) = await commentsService.GetAllCommentsAsync();
+            
+            return Results.Ok(new { data = comments, count });
+        });
     }
 }

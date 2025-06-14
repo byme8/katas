@@ -16,6 +16,7 @@ services.ConfigureHttpJsonOptions(o =>
 });
 
 services.AddScoped<CommentsOffsetService>();
+services.AddScoped<CommentsService>();
 services.AddHostedService<DatabaseSeedingService>();
 
 var app = builder.Build();

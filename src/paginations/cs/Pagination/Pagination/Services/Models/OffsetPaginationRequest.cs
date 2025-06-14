@@ -27,4 +27,6 @@ public class OffsetPaginationRequest<TOrderBy>
     public TOrderBy OrderBy { get; set; }
     
     public SortDirection Direction { get; set; } = SortDirection.Descending;
+    
+    public bool SkipCount { get; set; } = false;
 }
