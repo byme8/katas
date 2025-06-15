@@ -1,0 +1,43 @@
+.offset-pagination {
+  margin: 16px 0;
+}
+
+.pagination-controls {
+  margin-bottom: 16px;
+  
+  .controls-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    
+    mat-form-field {
+      flex: 1;
+      max-width: 200px;
+    }
+  }
+}
+
+.pagination-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.info-text {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+}
+
+.page-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.page-info {
+  margin: 0 16px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.87);
+  white-space: nowrap;
+}

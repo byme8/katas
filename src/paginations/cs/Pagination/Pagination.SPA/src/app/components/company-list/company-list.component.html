@@ -1,0 +1,109 @@
+<mat-card class="company-list-card">
+  <mat-card-header>
+    <mat-card-title>Companies</mat-card-title>
+    <mat-card-subtitle *ngIf="downloadDuration()" class="download-stats">
+      <mat-icon>schedule</mat-icon>
+      Download time: {{ downloadDuration()! | number:'1.0-0' }}ms
+    </mat-card-subtitle>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <div class="loading-container" *ngIf="loading()">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading companies...</p>
+      <button mat-button color="warn" (click)="cancelLoading()">
+        <mat-icon>cancel</mat-icon>
+        Cancel
+      </button>
+    </div>
+    
+    <mat-card class="error-card" *ngIf="error()">
+      <mat-card-content>
+        <mat-icon color="warn">error</mat-icon>
+        Error loading companies: {{ error() }}
+      </mat-card-content>
+    </mat-card>
+    
+    <div class="table-container" *ngIf="!loading() && !error() && hasData()">
+      <mat-table [dataSource]="companies()" class="companies-table" matSort (matSortChange)="onSortChange($event)" [matSortActive]="sortActive()" [matSortDirection]="sortDirection()">
+        <ng-container matColumnDef="id">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>ID</mat-header-cell>
+          <mat-cell *matCellDef="let company">{{ company.id }}</mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="name">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Name</mat-header-cell>
+          <mat-cell *matCellDef="let company">{{ company.name }}</mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="email">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Email</mat-header-cell>
+          <mat-cell *matCellDef="let company">{{ company.email }}</mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="createdAt">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Created At</mat-header-cell>
+          <mat-cell *matCellDef="let company">{{ company.createdAt | date:'short' }}</mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+          <mat-cell *matCellDef="let company">
+            <div class="action-menu">
+              <button mat-icon-button [matMenuTriggerFor]="actionsMenu" color="primary" 
+                      matTooltip="View Users - Different Pagination Strategies">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              
+              <mat-menu #actionsMenu="matMenu" class="actions-menu">
+                <button mat-menu-item [routerLink]="['/companies', company.id, 'users-client']">
+                  <mat-icon class="menu-icon naive">people_outline</mat-icon>
+                  <span class="menu-text">
+                    <span class="strategy-name">Naive</span>
+                  </span>
+                </button>
+                
+                <button mat-menu-item [routerLink]="['/companies', company.id, 'users']">
+                  <mat-icon class="menu-icon server">people</mat-icon>
+                  <span class="menu-text">
+                    <span class="strategy-name">Server</span>
+                  </span>
+                </button>
+                
+                <button mat-menu-item [routerLink]="['/companies', company.id, 'users-precache']">
+                  <mat-icon class="menu-icon cache">cached</mat-icon>
+                  <span class="menu-text">
+                    <span class="strategy-name">Server + Cache</span>
+                  </span>
+                </button>
+              </mat-menu>
+            </div>
+          </mat-cell>
+        </ng-container>
+        
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      </mat-table>
+    </div>
+    
+    <div class="bottom-controls" *ngIf="!loading() && !error() && hasData()">
+      <mat-form-field class="page-size-control">
+        <mat-label>Page Size</mat-label>
+        <mat-select [value]="size()" (selectionChange)="updateSize($event.value)">
+          <mat-option [value]="10">10</mat-option>
+          <mat-option [value]="25">25</mat-option>
+          <mat-option [value]="50">50</mat-option>
+          <mat-option [value]="100">100</mat-option>
+        </mat-select>
+      </mat-form-field>
+      
+      <app-offset-pagination
+        [metadata]="metadata()"
+        [config]="paginationConfig()"
+        entityName="companies"
+        [showControls]="false"
+        (pageChange)="goToPage($event)">
+      </app-offset-pagination>
+    </div>
+  </mat-card-content>
+</mat-card>

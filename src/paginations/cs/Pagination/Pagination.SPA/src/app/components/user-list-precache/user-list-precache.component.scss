@@ -1,0 +1,156 @@
+.user-list-precache-card {
+  margin: 16px;
+  height: calc(100vh - 150px);
+  display: flex;
+  flex-direction: column;
+  
+  mat-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .stats-container {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  
+  .download-stats, .precache-stats {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 14px;
+    
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+  
+  .precache-stats {
+    color: rgba(0, 0, 0, 0.5);
+    font-style: italic;
+  }
+}
+
+.cache-stats-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  
+  mat-chip-set {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .cache-chip {
+    background-color: rgba(63, 81, 181, 0.1);
+    color: #3f51b5;
+    
+    &.loading {
+      background-color: rgba(255, 152, 0, 0.1);
+      color: #ff9800;
+      
+      mat-icon {
+        animation: spin 1s linear infinite;
+      }
+    }
+    
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+  
+  button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px;
+  gap: 16px;
+  
+  p {
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0;
+  }
+  
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.error-card {
+  margin: 16px 0;
+  background-color: #ffebee;
+  
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #c62828;
+  }
+}
+
+.table-container {
+  margin: 16px 0;
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.users-table {
+  width: 100%;
+  
+  mat-cell, mat-header-cell {
+    &:first-child {
+      padding-left: 0;
+    }
+    &:last-child {
+      padding-right: 0;
+    }
+  }
+  
+  .social-handle {
+    color: #1976d2;
+    font-family: monospace;
+    font-size: 12px;
+  }
+}
+
+.bottom-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  
+  .page-size-control {
+    width: 100px;
+  }
+}

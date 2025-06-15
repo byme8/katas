@@ -24,7 +24,7 @@ public class OffsetPaginationRequest<TOrderBy>
     [Required]
     public int Size { get; set; }
     
-    public TOrderBy OrderBy { get; set; }
+    public TOrderBy OrderBy { get; set; } = default!;
     
     public SortDirection Direction { get; set; } = SortDirection.Descending;
     

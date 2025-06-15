@@ -1,0 +1,148 @@
+.company-list-card {
+  margin: 16px;
+  height: calc(100vh - 150px);
+  display: flex;
+  flex-direction: column;
+  
+  mat-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .download-stats {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 14px;
+    
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px;
+  gap: 16px;
+  
+  p {
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0;
+  }
+  
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.error-card {
+  margin: 16px 0;
+  background-color: #ffebee;
+  
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #c62828;
+  }
+}
+
+.table-container {
+  margin: 16px 0;
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.companies-table {
+  width: 100%;
+  
+  mat-cell, mat-header-cell {
+    &:first-child {
+      padding-left: 0;
+    }
+    &:last-child {
+      padding-right: 0;
+      text-align: right;
+    }
+  }
+  
+  .action-menu {
+    display: flex;
+    justify-content: flex-end;
+    
+    button[mat-icon-button] {
+      width: 40px;
+      height: 40px;
+    }
+  }
+}
+
+.bottom-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  
+  .page-size-control {
+    width: 100px;
+  }
+}
+
+// Global styles for the menu (since mat-menu renders outside component)
+:host ::ng-deep .actions-menu {
+  .mat-mdc-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 56px;
+    padding: 8px 16px;
+    
+    .menu-icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      
+      &.naive {
+        color: #9c27b0; // Purple for naive/client-side
+      }
+      
+      &.server {
+        color: #2196f3; // Blue for server-side
+      }
+      
+      &.cache {
+        color: #ff9800; // Orange for cached
+      }
+    }
+    
+    .menu-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 1.2;
+      
+      .strategy-name {
+        font-weight: 500;
+        font-size: 14px;
+        color: rgba(0, 0, 0, 0.87);
+      }
+      
+      .strategy-desc {
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.6);
+        margin-top: 2px;
+      }
+    }
+  }
+}

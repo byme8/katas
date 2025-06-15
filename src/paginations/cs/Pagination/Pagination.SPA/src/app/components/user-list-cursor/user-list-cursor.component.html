@@ -1,0 +1,151 @@
+<div class="user-list-cursor">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>{{ title() }}</mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <!-- Loading state -->
+      <div *ngIf="loading()" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading users...</p>
+        <button mat-raised-button color="warn" (click)="cancelLoading()">
+          <mat-icon>close</mat-icon>
+          Cancel
+        </button>
+      </div>
+      
+      <!-- Error state -->
+      <div *ngIf="error() && !loading()" class="error-container">
+        <mat-icon color="warn">error</mat-icon>
+        <p>{{ error() }}</p>
+        <button mat-raised-button color="primary" (click)="loadUsers()">
+          <mat-icon>refresh</mat-icon>
+          Retry
+        </button>
+      </div>
+      
+      <!-- Success state -->
+      <div *ngIf="!loading() && !error() && hasData()">
+        <!-- Performance info -->
+        <div class="performance-info" *ngIf="downloadDuration()">
+          <small>Downloaded in {{ downloadDuration() }}ms</small>
+        </div>
+        
+        <!-- Pagination controls -->
+        <app-cursor-pagination
+          [metadata]="metadata()"
+          [config]="paginationConfig()"
+          entityName="users"
+          (sizeChange)="updateSize($event)"
+          (nextPage)="onNextPage()"
+          (previousPage)="onPreviousPage()"
+          (firstPage)="onFirstPage()"
+          (lastPage)="onLastPage()">
+        </app-cursor-pagination>
+        
+        <!-- User table -->
+        <div class="table-container">
+          <table mat-table [dataSource]="users()" matSort 
+                 [matSortActive]="sortActive()" 
+                 [matSortDirection]="sortDirection()"
+                 (matSortChange)="onSortChange($event)">
+            
+            <!-- ID Column -->
+            <ng-container matColumnDef="id">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="id">ID</th>
+              <td mat-cell *matCellDef="let user">{{ user.id }}</td>
+            </ng-container>
+            
+            <!-- Company ID Column -->
+            <ng-container matColumnDef="companyId">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="companyId">Company ID</th>
+              <td mat-cell *matCellDef="let user">{{ user.companyId }}</td>
+            </ng-container>
+            
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="name">Name</th>
+              <td mat-cell *matCellDef="let user">{{ user.name }}</td>
+            </ng-container>
+            
+            <!-- Email Column -->
+            <ng-container matColumnDef="email">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="email">Email</th>
+              <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+            </ng-container>
+            
+            <!-- Phone Number Column -->
+            <ng-container matColumnDef="phoneNumber">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="phoneNumber">Phone</th>
+              <td mat-cell *matCellDef="let user">{{ user.phoneNumber || '-' }}</td>
+            </ng-container>
+            
+            <!-- Twitter Handle Column -->
+            <ng-container matColumnDef="twitterHandle">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="twitterHandle">Twitter</th>
+              <td mat-cell *matCellDef="let user">{{ user.twitterHandle ? '@' + user.twitterHandle : '-' }}</td>
+            </ng-container>
+            
+            <!-- Facebook Profile Column -->
+            <ng-container matColumnDef="facebookProfile">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="facebookProfile">Facebook</th>
+              <td mat-cell *matCellDef="let user">{{ user.facebookProfile || '-' }}</td>
+            </ng-container>
+            
+            <!-- WhatsApp Number Column -->
+            <ng-container matColumnDef="whatsAppNumber">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="whatsAppNumber">WhatsApp</th>
+              <td mat-cell *matCellDef="let user">{{ user.whatsAppNumber || '-' }}</td>
+            </ng-container>
+            
+            <!-- Instagram Handle Column -->
+            <ng-container matColumnDef="instagramHandle">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="instagramHandle">Instagram</th>
+              <td mat-cell *matCellDef="let user">{{ user.instagramHandle ? '@' + user.instagramHandle : '-' }}</td>
+            </ng-container>
+            
+            <!-- Bluesky Handle Column -->
+            <ng-container matColumnDef="blueskyHandle">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="blueskyHandle">Bluesky</th>
+              <td mat-cell *matCellDef="let user">{{ user.blueskyHandle ? '@' + user.blueskyHandle : '-' }}</td>
+            </ng-container>
+            
+            <!-- Created At Column -->
+            <ng-container matColumnDef="createdAt">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="createdAt">Created</th>
+              <td mat-cell *matCellDef="let user">{{ user.createdAt | date:'short' }}</td>
+            </ng-container>
+            
+            <!-- Updated At Column -->
+            <ng-container matColumnDef="updatedAt">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="updatedAt">Updated</th>
+              <td mat-cell *matCellDef="let user">{{ user.updatedAt | date:'short' }}</td>
+            </ng-container>
+            
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+        
+        <!-- Bottom pagination -->
+        <app-cursor-pagination
+          [metadata]="metadata()"
+          [config]="paginationConfig()"
+          entityName="users"
+          [showControls]="false"
+          (nextPage)="onNextPage()"
+          (previousPage)="onPreviousPage()"
+          (firstPage)="onFirstPage()"
+          (lastPage)="onLastPage()">
+        </app-cursor-pagination>
+      </div>
+      
+      <!-- No data state -->
+      <div *ngIf="!loading() && !error() && !hasData()" class="no-data-container">
+        <mat-icon>inbox</mat-icon>
+        <p>No users found</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

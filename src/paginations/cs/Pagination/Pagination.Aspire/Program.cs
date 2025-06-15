@@ -4,6 +4,7 @@ var password = builder.AddParameter("postgres-password", secret: true);
 var postgres = builder.AddPostgres("postgres", password: password)
     .WithHostPort(5432)
     .WithDataVolume()
+    .WithLifetime(ContainerLifetime.Persistent)
     .WithPgAdmin()
     .AddDatabase("paginationdb");
 

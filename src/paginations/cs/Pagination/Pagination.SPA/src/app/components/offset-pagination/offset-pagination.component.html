@@ -1,0 +1,84 @@
+<div class="offset-pagination">
+  <mat-card class="pagination-controls" *ngIf="showControls">
+    <mat-card-content>
+      <div class="controls-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Page Size</mat-label>
+          <mat-select [value]="config.size" (selectionChange)="onSizeChange($event.value)">
+            <mat-option [value]="10">10</mat-option>
+            <mat-option [value]="25">25</mat-option>
+            <mat-option [value]="50">50</mat-option>
+            <mat-option [value]="100">100</mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Sort By</mat-label>
+          <mat-select [value]="config.orderBy" (selectionChange)="onOrderByChange($event.value)">
+            <mat-option *ngFor="let option of config.orderByOptions" [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Sort Direction</mat-label>
+          <mat-select [value]="config.direction" (selectionChange)="onDirectionChange($event.value)">
+            <mat-option value="ASC">Ascending</mat-option>
+            <mat-option value="DESC">Descending</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  
+  <div class="pagination-info" *ngIf="metadata && showInfo">
+    <div class="info-text" *ngIf="!metadata.countSkipped">
+      Showing {{ metadata.itemsFrom }} - 
+      {{ metadata.itemsTo }} 
+      of {{ metadata.totalCount }} {{ entityName }}
+    </div>
+    <div class="info-text" *ngIf="metadata.countSkipped">
+      Page {{ metadata.currentPage }}
+    </div>
+    
+    <div class="page-controls">
+      <button 
+        mat-icon-button
+        (click)="onPageChange(1)" 
+        [disabled]="!metadata?.hasPreviousPage"
+        matTooltip="First page">
+        <mat-icon>first_page</mat-icon>
+      </button>
+      <button 
+        mat-icon-button
+        (click)="onPageChange(metadata.currentPage - 1)" 
+        [disabled]="!metadata?.hasPreviousPage"
+        matTooltip="Previous page">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      
+      <span class="page-info" *ngIf="metadata && !metadata.countSkipped">
+        Page {{ metadata.currentPage }} of {{ metadata.totalPages }}
+      </span>
+      <span class="page-info" *ngIf="metadata?.countSkipped">
+        Page {{ metadata.currentPage }}
+      </span>
+      
+      <button 
+        mat-icon-button
+        (click)="onPageChange(metadata.currentPage + 1)" 
+        [disabled]="metadata?.hasNextPage === false"
+        matTooltip="Next page">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+      <button 
+        mat-icon-button
+        (click)="onPageChange(metadata.totalPages || metadata.currentPage)" 
+        [disabled]="metadata?.hasNextPage === false"
+        matTooltip="Last page">
+        <mat-icon>last_page</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

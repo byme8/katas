@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Pagination.Data;
 using Pagination.Json;
 using Pagination.Services;
+using System.Data.Common;
+using Dapper;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -15,29 +17,22 @@ services.ConfigureHttpJsonOptions(o =>
     o.SerializerOptions.Converters.Add(new JsonStringEnumConverterProvider());
 });
 
-services.AddScoped<CommentsOffsetService>();
-services.AddScoped<CommentsService>();
+services.AddScoped<UsersOffsetService>();
+services.AddScoped<UsersCursorService>();
+services.AddScoped<CursorService>();
+services.AddScoped<UsersService>();
+services.AddScoped<CompaniesOffsetService>();
 services.AddHostedService<DatabaseSeedingService>();
+
+// Configure Dapper SQL logging
+SqlMapper.Settings.CommandTimeout = 30;
 
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
 
-app.MapGet("/users", async (PaginationDbContext context) =>
-{
-    var users = await context.Users
-        .ToListAsync();
-    return users;
-});
-
-app.MapGet("/users/{userId}/comments", async (Guid userId, PaginationDbContext context) =>
-{
-    var comments = await context.Comments
-        .Where(c => c.UserId == userId)
-        .ToListAsync();
-    return comments;
-});
-
-app.MapComments();
+var api = app.MapGroup("/api");
+api.MapCompanies();
+api.MapUsers();
 
 app.Run();

@@ -1,16 +1,30 @@
 @Host = http://localhost:10000
-@userId = f6feffa8-e57e-4f5b-903e-6aabe26efc50
+@companyId = 100
+@smallCompanyId = 1
 
-GET {{Host}}/users
+GET {{Host}}/api/companies
 Accept: application/json
 
 ###
-GET {{Host}}/users/{{userId}}/comments
+# Offset-based pagination for companies
+POST {{Host}}/api/companies/offset
+Accept: application/json
+Content-Type: application/json
+
+{
+  "page": 1,
+  "size": 10,
+  "orderBy": "NAME",
+  "direction": "ASC"
+}
+
+###
+GET {{Host}}/api/companies/{{companyId}}/users
 Accept: application/json
 
 ###
-# Offset-based pagination
-POST {{Host}}/users/{{userId}}/comments/offset
+# Offset-based pagination for company users
+POST {{Host}}/api/companies/{{companyId}}/users/offset
 Accept: application/json
 Content-Type: application/json
 
@@ -23,15 +37,14 @@ Content-Type: application/json
 
 ###
 
-# Offset-based pagination
-POST {{Host}}/comments/all
+# Get all users
+GET {{Host}}/api/users/all
 Accept: application/json
-Content-Type: application/json
 
 ###
 
-# Offset-based pagination
-POST {{Host}}/comments/offset
+# Offset-based pagination for all users
+POST {{Host}}/api/users/offset
 Accept: application/json
 Content-Type: application/json
 
@@ -41,4 +54,37 @@ Content-Type: application/json
   "skipCount": false,
   "orderBy": "CREATED_AT",
   "direction": "DESC"
+}
+
+###
+
+# Offset-based pagination for all users
+POST {{Host}}/api/users/offset
+Accept: application/json
+Content-Type: application/json
+
+{
+  "page": 100000,
+  "size": 10,
+  "skipCount": true,
+  "orderBy": "CREATED_AT",
+  "direction": "DESC"
+}
+
+###
+# Get all users for Small Company (should return 15 users)
+GET {{Host}}/api/companies/{{smallCompanyId}}/users
+Accept: application/json
+
+###
+# Offset-based pagination for Small Company users
+POST {{Host}}/api/companies/{{smallCompanyId}}/users/offset
+Accept: application/json
+Content-Type: application/json
+
+{
+  "page": 1,
+  "size": 10,
+  "orderBy": "NAME",
+  "direction": "ASC"
 }

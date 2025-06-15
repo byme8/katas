@@ -1,0 +1,95 @@
+.user-list-card {
+  margin: 16px;
+  height: calc(100vh - 150px);
+  display: flex;
+  flex-direction: column;
+  
+  mat-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .download-stats {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 14px;
+    
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px;
+  gap: 16px;
+  
+  p {
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0;
+  }
+  
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.error-card {
+  margin: 16px 0;
+  background-color: #ffebee;
+  
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #c62828;
+  }
+}
+
+.table-container {
+  margin: 16px 0;
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.users-table {
+  width: 100%;
+  
+  mat-cell, mat-header-cell {
+    &:first-child {
+      padding-left: 0;
+    }
+    &:last-child {
+      padding-right: 0;
+    }
+  }
+  
+  .social-handle {
+    color: #1976d2;
+    font-family: monospace;
+    font-size: 12px;
+  }
+}
+
+.bottom-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  
+  .page-size-control {
+    width: 100px;
+  }
+}

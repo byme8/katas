@@ -7,7 +7,13 @@
       "Bash(dotnet ef migrations add:*)",
       "Bash(dotnet build:*)",
       "Bash(dotnet ef database update:*)",
-      "Bash(dotnet add:*)"
+      "Bash(dotnet add:*)",
+      "Bash(dotnet ef migrations remove:*)",
+      "Bash(mkdir:*)",
+      "Bash(bun run:*)",
+      "Bash(bun add:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

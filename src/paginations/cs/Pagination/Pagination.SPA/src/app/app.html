@@ -1,0 +1,40 @@
+<div class="app-container">
+  <mat-toolbar color="primary" class="app-toolbar">
+    <button mat-icon-button (click)="openSettings()" matTooltip="Settings">
+      <mat-icon>settings</mat-icon>
+    </button>
+    <mat-icon class="app-icon">list</mat-icon>
+    <span class="app-title">{{ title }}</span>
+    <span class="spacer"></span>
+    <nav class="nav-buttons">
+      <a mat-button routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">
+        <mat-icon>home</mat-icon>
+        Home
+      </a>
+      <a mat-button routerLink="/companies" routerLinkActive="active-link">
+        <mat-icon>business</mat-icon>
+        Companies
+      </a>
+      <a mat-button routerLink="/users" routerLinkActive="active-link">
+        <mat-icon>people</mat-icon>
+        All Users
+      </a>
+      <a mat-button routerLink="/users-client" routerLinkActive="active-link">
+        <mat-icon>people_outline</mat-icon>
+        Users (Client)
+      </a>
+      <a mat-button routerLink="/users-precache" routerLinkActive="active-link">
+        <mat-icon>cached</mat-icon>
+        Users (Precache)
+      </a>
+      <a mat-button routerLink="/users-cursor" routerLinkActive="active-link">
+        <mat-icon>forward</mat-icon>
+        Users (Cursor)
+      </a>
+    </nav>
+  </mat-toolbar>
+  
+  <main class="main-content">
+    <router-outlet />
+  </main>
+</div>

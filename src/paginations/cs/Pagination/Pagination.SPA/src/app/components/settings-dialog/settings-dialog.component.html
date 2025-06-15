@@ -1,0 +1,35 @@
+<h2 mat-dialog-title>
+  <mat-icon>settings</mat-icon>
+  Settings
+</h2>
+
+<mat-dialog-content>
+  <div class="settings-section">
+    <h3>Pagination Settings</h3>
+    
+    <div class="setting-item">
+      <mat-slide-toggle 
+        [(ngModel)]="localSkipCountCalculation"
+        color="primary">
+        Skip count calculation for better performance
+      </mat-slide-toggle>
+      <p class="setting-description">
+        When enabled, pagination will not calculate total record counts, improving performance on large datasets. 
+        However, total page information will not be available.
+      </p>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onReset()" color="warn">
+    <mat-icon>restore</mat-icon>
+    Reset to Defaults
+  </button>
+  <div class="spacer"></div>
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button (click)="onSave()" color="primary">
+    <mat-icon>save</mat-icon>
+    Save
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,57 @@
+<div class="cursor-pagination">
+  <mat-card class="pagination-controls" *ngIf="showControls">
+    <mat-card-content>
+      <div class="controls-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Page Size</mat-label>
+          <mat-select [value]="config.size" (selectionChange)="onSizeChange($event.value)">
+            <mat-option [value]="10">10</mat-option>
+            <mat-option [value]="25">25</mat-option>
+            <mat-option [value]="50">50</mat-option>
+            <mat-option [value]="100">100</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  
+  <div class="pagination-info" *ngIf="metadata && showInfo">
+    <div class="info-text">
+      Page size: {{ metadata.pageSize }} {{ entityName }}
+    </div>
+    
+    <div class="page-controls">
+      <button 
+        mat-icon-button
+        (click)="onFirstPage()" 
+        matTooltip="First page">
+        <mat-icon>first_page</mat-icon>
+      </button>
+      <button 
+        mat-icon-button
+        (click)="onPreviousPage()" 
+        [disabled]="!metadata?.hasPreviousPage"
+        matTooltip="Previous page">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      
+      <span class="page-info">
+        Cursor-based pagination
+      </span>
+      
+      <button 
+        mat-icon-button
+        (click)="onNextPage()" 
+        [disabled]="!metadata?.hasNextPage"
+        matTooltip="Next page">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+      <button 
+        mat-icon-button
+        (click)="onLastPage()" 
+        matTooltip="Last page">
+        <mat-icon>last_page</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

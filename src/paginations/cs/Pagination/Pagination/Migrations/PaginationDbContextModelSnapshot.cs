@@ -22,54 +22,13 @@ namespace Pagination.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Pagination.Data.Entities.Comment", b =>
+            modelBuilder.Entity("Pagination.Data.Entities.Company", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("bigint");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("IsDeleted", "DeletedAt");
-
-                    b.HasIndex("IsDeleted", "CreatedAt", "Id")
-                        .HasDatabaseName("IX_Comments_IsDeleted_CreatedAt_Id");
-
-                    b.HasIndex("IsDeleted", "UpdatedAt", "Id")
-                        .HasDatabaseName("IX_Comments_IsDeleted_UpdatedAt_Id");
-
-                    b.HasIndex("IsDeleted", "UserId", "Id")
-                        .HasDatabaseName("IX_Comments_IsDeleted_UserId_Id");
-
-                    b.ToTable("Comments");
-                });
-
-            modelBuilder.Entity("Pagination.Data.Entities.User", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -99,23 +58,108 @@ namespace Pagination.Migrations
 
                     b.HasIndex("IsDeleted", "DeletedAt");
 
-                    b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("Pagination.Data.Entities.Comment", b =>
-                {
-                    b.HasOne("Pagination.Data.Entities.User", "User")
-                        .WithMany("Comments")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
+                    b.ToTable("Companies");
                 });
 
             modelBuilder.Entity("Pagination.Data.Entities.User", b =>
                 {
-                    b.Navigation("Comments");
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("BlueskyHandle")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("FacebookProfile")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("InstagramHandle")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TwitterHandle")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WhatsAppNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlueskyHandle");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("Email");
+
+                    b.HasIndex("InstagramHandle");
+
+                    b.HasIndex("PhoneNumber");
+
+                    b.HasIndex("TwitterHandle");
+
+                    b.HasIndex("IsDeleted", "DeletedAt");
+
+                    b.HasIndex("IsDeleted", "CompanyId", "Id")
+                        .HasDatabaseName("IX_Users_IsDeleted_CompanyId_Id");
+
+                    b.HasIndex("IsDeleted", "CreatedAt", "Id")
+                        .HasDatabaseName("IX_Users_IsDeleted_CreatedAt_Id");
+
+                    b.HasIndex("IsDeleted", "UpdatedAt", "Id")
+                        .HasDatabaseName("IX_Users_IsDeleted_UpdatedAt_Id");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Pagination.Data.Entities.User", b =>
+                {
+                    b.HasOne("Pagination.Data.Entities.Company", "Company")
+                        .WithMany("Users")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("Pagination.Data.Entities.Company", b =>
+                {
+                    b.Navigation("Users");
                 });
 #pragma warning restore 612, 618
         }

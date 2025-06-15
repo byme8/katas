@@ -2,7 +2,8 @@ namespace Pagination.Services;
 
 public static class OffsetValidatorExtensions
 {
-    public static IReadOnlyList<string> Validate(this OffsetPaginationRequest<CommentSortField> request)
+    public static IReadOnlyList<string> Validate<TOrderBy>(this OffsetPaginationRequest<TOrderBy> request)
+        where TOrderBy : Enum
     {
         var list = new List<string>();
         
@@ -16,7 +17,7 @@ public static class OffsetValidatorExtensions
             list.Add("Size must be greater than 0.");
         }
 
-        if (request.OrderBy == CommentSortField.None)
+        if (request.OrderBy != null && request.OrderBy.ToString() == "None")
         {
             list.Add("OrderBy cannot be None.");
         }

@@ -1,0 +1,156 @@
+<mat-card class="user-list-precache-card">
+  <mat-card-header>
+    <mat-card-title>{{ title() }}</mat-card-title>
+    <mat-card-subtitle>
+      <div class="stats-container">
+        <div class="download-stats" [style.visibility]="downloadDuration() ? 'visible' : 'hidden'">
+          <mat-icon>schedule</mat-icon>
+          Download time: {{ downloadDuration() ? (downloadDuration()! | number:'1.0-0') : '0' }}ms
+        </div>
+        <div class="precache-stats" [style.visibility]="precacheDuration() ? 'visible' : 'hidden'">
+          <mat-icon>cached</mat-icon>
+          Precache time: {{ precacheDuration() ? (precacheDuration()! | number:'1.0-0') : '0' }}ms
+        </div>
+      </div>
+    </mat-card-subtitle>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <!-- Cache Stats -->
+    <div class="cache-stats-container">
+      <mat-chip-set>
+        <mat-chip class="cache-chip">
+          <mat-icon matChipAvatar>storage</mat-icon>
+          Cached Pages: {{ cachedPageCount() }}
+        </mat-chip>
+        <mat-chip class="cache-chip">
+          <mat-icon matChipAvatar>trending_up</mat-icon>
+          Cache Hit Rate: {{ cacheHitRate() }}%
+        </mat-chip>
+        <mat-chip class="cache-chip" [class.loading]="precacheLoading()">
+          <mat-icon matChipAvatar>
+            {{ precacheLoading() ? 'hourglass_empty' : 'flash_on' }}
+          </mat-icon>
+          {{ precacheLoading() ? 'Precaching...' : 'Ready' }}
+        </mat-chip>
+      </mat-chip-set>
+      
+      <button mat-button color="warn" (click)="clearCacheManually()" [disabled]="cachedPageCount() === 0">
+        <mat-icon>clear_all</mat-icon>
+        Clear Cache
+      </button>
+    </div>
+
+    <div class="loading-container" *ngIf="loading()">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading users...</p>
+      <button mat-button color="warn" (click)="cancelLoading()">
+        <mat-icon>cancel</mat-icon>
+        Cancel
+      </button>
+    </div>
+    
+    <mat-card class="error-card" *ngIf="error()">
+      <mat-card-content>
+        <mat-icon color="warn">error</mat-icon>
+        Error loading users: {{ error() }}
+      </mat-card-content>
+    </mat-card>
+    
+    <div class="table-container" *ngIf="!loading() && !error() && hasData()">
+      <mat-table [dataSource]="users()" class="users-table" matSort (matSortChange)="onSortChange($event)" [matSortActive]="sortActive()" [matSortDirection]="sortDirection()">
+        <ng-container matColumnDef="id">
+          <mat-header-cell *matHeaderCellDef mat-sort-header disabled>ID</mat-header-cell>
+          <mat-cell *matCellDef="let user">{{ user.id }}</mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="name">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Name</mat-header-cell>
+          <mat-cell *matCellDef="let user">{{ user.name }}</mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="email">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Email</mat-header-cell>
+          <mat-cell *matCellDef="let user">{{ user.email }}</mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="companyId">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Company ID</mat-header-cell>
+          <mat-cell *matCellDef="let user">{{ user.companyId }}</mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="phoneNumber">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Phone</mat-header-cell>
+          <mat-cell *matCellDef="let user">{{ user.phoneNumber || '-' }}</mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="twitterHandle">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Twitter</mat-header-cell>
+          <mat-cell *matCellDef="let user">
+            <span *ngIf="user.twitterHandle" class="social-handle">{{ '@' + user.twitterHandle }}</span>
+            <span *ngIf="!user.twitterHandle">-</span>
+          </mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="facebookProfile">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Facebook</mat-header-cell>
+          <mat-cell *matCellDef="let user">{{ user.facebookProfile || '-' }}</mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="whatsAppNumber">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>WhatsApp</mat-header-cell>
+          <mat-cell *matCellDef="let user">{{ user.whatsAppNumber || '-' }}</mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="instagramHandle">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Instagram</mat-header-cell>
+          <mat-cell *matCellDef="let user">
+            <span *ngIf="user.instagramHandle" class="social-handle">{{ '@' + user.instagramHandle }}</span>
+            <span *ngIf="!user.instagramHandle">-</span>
+          </mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="blueskyHandle">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Bluesky</mat-header-cell>
+          <mat-cell *matCellDef="let user">
+            <span *ngIf="user.blueskyHandle" class="social-handle">{{ '@' + user.blueskyHandle }}</span>
+            <span *ngIf="!user.blueskyHandle">-</span>
+          </mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="createdAt">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Created At</mat-header-cell>
+          <mat-cell *matCellDef="let user">{{ user.createdAt | date:'short' }}</mat-cell>
+        </ng-container>
+        
+        <ng-container matColumnDef="updatedAt">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Updated At</mat-header-cell>
+          <mat-cell *matCellDef="let user">{{ user.updatedAt | date:'short' }}</mat-cell>
+        </ng-container>
+        
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      </mat-table>
+    </div>
+    
+    <div class="bottom-controls" *ngIf="!loading() && !error() && hasData()">
+      <mat-form-field class="page-size-control">
+        <mat-label>Page Size</mat-label>
+        <mat-select [value]="size()" (selectionChange)="updateSize($event.value)">
+          <mat-option [value]="10">10</mat-option>
+          <mat-option [value]="25">25</mat-option>
+          <mat-option [value]="50">50</mat-option>
+          <mat-option [value]="100">100</mat-option>
+        </mat-select>
+      </mat-form-field>
+      
+      <app-offset-pagination
+        [metadata]="metadata()"
+        [config]="paginationConfig()"
+        entityName="users"
+        [showControls]="false"
+        (pageChange)="goToPage($event)">
+      </app-offset-pagination>
+    </div>
+  </mat-card-content>
+</mat-card>
