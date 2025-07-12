@@ -1,5 +1,6 @@
 using Bogus;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 using Npgsql;
 using Pagination.Data;
 using Pagination.Data.Entities;
@@ -72,7 +73,7 @@ public class DatabaseSeedingService(IServiceProvider serviceProvider, ILogger<Da
         const int maxUsersPerCompany = 500;
         const int batchSize = 10_000;
 
-        var baseTime = DateTime.UtcNow;
+        var baseTime = SystemClock.Instance.GetCurrentInstant();
 
         // Special small company details
         const long smallCompanyId = 1;
@@ -91,8 +92,8 @@ public class DatabaseSeedingService(IServiceProvider serviceProvider, ILogger<Da
             await writer.WriteAsync(smallCompanyId, NpgsqlTypes.NpgsqlDbType.Bigint, cancellationToken);
             await writer.WriteAsync(smallCompanyName, NpgsqlTypes.NpgsqlDbType.Text, cancellationToken);
             await writer.WriteAsync("contact@smallcompany.com", NpgsqlTypes.NpgsqlDbType.Text, cancellationToken);
-            await writer.WriteAsync(baseTime, NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
-            await writer.WriteAsync(baseTime, NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
+            await writer.WriteAsync(baseTime.ToDateTimeUtc(), NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
+            await writer.WriteAsync(baseTime.ToDateTimeUtc(), NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
             await writer.WriteAsync(false, NpgsqlTypes.NpgsqlDbType.Boolean, cancellationToken);
             await writer.WriteAsync(DBNull.Value, NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
 
@@ -113,8 +114,8 @@ public class DatabaseSeedingService(IServiceProvider serviceProvider, ILogger<Da
                 await writer.WriteAsync(companyId, NpgsqlTypes.NpgsqlDbType.Bigint, cancellationToken);
                 await writer.WriteAsync(companyName, NpgsqlTypes.NpgsqlDbType.Text, cancellationToken);
                 await writer.WriteAsync($"contact@{emailDomain}.com", NpgsqlTypes.NpgsqlDbType.Text, cancellationToken);
-                await writer.WriteAsync(baseTime, NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
-                await writer.WriteAsync(baseTime, NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
+                await writer.WriteAsync(baseTime.ToDateTimeUtc(), NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
+                await writer.WriteAsync(baseTime.ToDateTimeUtc(), NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
                 await writer.WriteAsync(false, NpgsqlTypes.NpgsqlDbType.Boolean, cancellationToken);
                 await writer.WriteAsync(DBNull.Value, NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
 
@@ -151,8 +152,8 @@ public class DatabaseSeedingService(IServiceProvider serviceProvider, ILogger<Da
             for (int i = 0; i < smallCompanyUserCount; i++)
             {
                 var name = names.FullName();
-                var createdAt = baseTime.AddMinutes(-Random.Shared.Next(0, 10000));
-                var updatedAt = baseTime.AddMinutes(-Random.Shared.Next(0, 10000));
+                var createdAt = baseTime.Plus(Duration.FromMinutes(-Random.Shared.Next(0, 10000)));
+                var updatedAt = baseTime.Plus(Duration.FromMinutes(-Random.Shared.Next(0, 10000)));
                 var socialFields = GenerateRandomSocialFields(faker, name);
 
                 await writer.StartRowAsync(cancellationToken);
@@ -166,8 +167,8 @@ public class DatabaseSeedingService(IServiceProvider serviceProvider, ILogger<Da
                 await writer.WriteAsync(socialFields.WhatsAppNumber ?? (object)DBNull.Value, NpgsqlTypes.NpgsqlDbType.Text, cancellationToken);
                 await writer.WriteAsync(socialFields.InstagramHandle ?? (object)DBNull.Value, NpgsqlTypes.NpgsqlDbType.Text, cancellationToken);
                 await writer.WriteAsync(socialFields.BlueskyHandle ?? (object)DBNull.Value, NpgsqlTypes.NpgsqlDbType.Text, cancellationToken);
-                await writer.WriteAsync(createdAt, NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
-                await writer.WriteAsync(updatedAt, NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
+                await writer.WriteAsync(createdAt.ToDateTimeUtc(), NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
+                await writer.WriteAsync(updatedAt.ToDateTimeUtc(), NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
                 await writer.WriteAsync(false, NpgsqlTypes.NpgsqlDbType.Boolean, cancellationToken);
                 await writer.WriteAsync(DBNull.Value, NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
             }
@@ -185,7 +186,7 @@ public class DatabaseSeedingService(IServiceProvider serviceProvider, ILogger<Da
         {
             batchNumber++;
             var companyBatch = companyIds.Skip(batch + 1).Take(batchSize).ToList(); // Skip small company (ID 1)
-            var batchStartTime = DateTime.UtcNow;
+            var batchStartTime = SystemClock.Instance.GetCurrentInstant();
             
             logger.LogInformation("Starting batch {BatchNumber}/{TotalBatches} - Processing {CompanyCount} companies", 
                 batchNumber, totalBatches, companyBatch.Count);
@@ -204,8 +205,8 @@ public class DatabaseSeedingService(IServiceProvider serviceProvider, ILogger<Da
                 for (int j = 0; j < usersForThisCompany; j++)
                 {
                     var name = names.FullName();
-                    var createdAt = baseTime.AddMinutes(-Random.Shared.Next(0, 10000));
-                    var updatedAt = baseTime.AddMinutes(-Random.Shared.Next(0, 10000));
+                    var createdAt = baseTime.Plus(Duration.FromMinutes(-Random.Shared.Next(0, 10000)));
+                    var updatedAt = baseTime.Plus(Duration.FromMinutes(-Random.Shared.Next(0, 10000)));
                     var socialFields = GenerateRandomSocialFields(faker, name);
 
                     await writer.StartRowAsync(cancellationToken);
@@ -219,8 +220,8 @@ public class DatabaseSeedingService(IServiceProvider serviceProvider, ILogger<Da
                     await writer.WriteAsync(socialFields.WhatsAppNumber ?? (object)DBNull.Value, NpgsqlTypes.NpgsqlDbType.Text, cancellationToken);
                     await writer.WriteAsync(socialFields.InstagramHandle ?? (object)DBNull.Value, NpgsqlTypes.NpgsqlDbType.Text, cancellationToken);
                     await writer.WriteAsync(socialFields.BlueskyHandle ?? (object)DBNull.Value, NpgsqlTypes.NpgsqlDbType.Text, cancellationToken);
-                    await writer.WriteAsync(createdAt, NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
-                    await writer.WriteAsync(updatedAt, NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
+                    await writer.WriteAsync(createdAt.ToDateTimeUtc(), NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
+                    await writer.WriteAsync(updatedAt.ToDateTimeUtc(), NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
                     await writer.WriteAsync(false, NpgsqlTypes.NpgsqlDbType.Boolean, cancellationToken);
                     await writer.WriteAsync(DBNull.Value, NpgsqlTypes.NpgsqlDbType.TimestampTz, cancellationToken);
                     
@@ -239,11 +240,12 @@ public class DatabaseSeedingService(IServiceProvider serviceProvider, ILogger<Da
 
             await writer.CompleteAsync(cancellationToken);
             
-            var batchDuration = DateTime.UtcNow - batchStartTime;
-            var usersPerSecond = usersInThisBatch / Math.Max(batchDuration.TotalSeconds, 1);
+            var batchDuration = SystemClock.Instance.GetCurrentInstant() - batchStartTime;
+            var batchDurationSeconds = batchDuration.ToTimeSpan().TotalSeconds;
+            var usersPerSecond = usersInThisBatch / Math.Max(batchDurationSeconds, 1);
             
             logger.LogInformation("✓ Completed batch {BatchNumber}/{TotalBatches}: {UsersInBatch} users for {CompaniesProcessed} companies in {Duration:F1}s ({UsersPerSecond:F0} users/sec). Total users: {TotalUsers}",
-                batchNumber, totalBatches, usersInThisBatch, companiesProcessed, batchDuration.TotalSeconds, usersPerSecond, userCount);
+                batchNumber, totalBatches, usersInThisBatch, companiesProcessed, batchDurationSeconds, usersPerSecond, userCount);
         }
 
     }

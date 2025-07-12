@@ -17,16 +17,11 @@ public static class CursorValidatorExtensions
             list.Add("Size cannot be greater than 1000.");
         }
 
-        if (request.OrderBy != null && request.OrderBy.ToString() == "None")
+        if (request.Order is null && request.Cursor is null)
         {
-            list.Add("OrderBy cannot be None.");
+            list.Add("Order cannot be null if Cursor is null.");
         }
-
-        if (request.Direction == SortDirection.None)
-        {
-            list.Add("Direction cannot be None.");
-        }
-
+        
         return list;
     }
 }

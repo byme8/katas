@@ -5,7 +5,7 @@ using Apparatus.AOT.Reflection;
 namespace Pagination.Services;
 
 [AOTReflection]
-public enum SortDirection
+public enum OrderDirection
 {
     [Description("NONE")]
     None,
@@ -14,6 +14,8 @@ public enum SortDirection
     [Description("DESC")]
     Descending
 }
+
+public record Order<TOrderBy>(TOrderBy OrderBy, OrderDirection Direction);
 
 public class OffsetPaginationRequest<TOrderBy>
     where TOrderBy : Enum
@@ -26,7 +28,7 @@ public class OffsetPaginationRequest<TOrderBy>
     
     public TOrderBy OrderBy { get; set; } = default!;
     
-    public SortDirection Direction { get; set; } = SortDirection.Descending;
+    public OrderDirection Direction { get; set; } = OrderDirection.Descending;
     
     public bool SkipCount { get; set; } = false;
 }

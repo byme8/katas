@@ -3,6 +3,7 @@ using System.Data;
 using Apparatus.AOT.Reflection;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 using Pagination.Data;
 using Pagination.Data.Entities;
 
@@ -13,23 +14,13 @@ public class UsersCursorService(PaginationDbContext context, CursorService curso
     public async Task<CursorPaginationResponse<User>> GetUsersAsync(long? companyId, CursorPaginationRequest<UserSortField> cursor, CancellationToken cancellationToken = default)
     {
         var size = cursor.Size;
-        var orderBy = cursor.OrderBy;
-        var direction = cursor.Direction;
+        var order = cursor.Order;
         var cursorValue = cursor.Cursor;
 
-        // Determine backward flag from cursor content if available
-        var isBackward = cursor.Backward;
-        if (!string.IsNullOrEmpty(cursorValue))
-        {
-            var decodedCursor = cursorService.DecodeCursor(cursorValue);
-            if (decodedCursor != null)
-            {
-                isBackward = decodedCursor.IsBackward;
-            }
-        }
-        
-        var (whereClause, orderByClause) = CreateCursorClauses(orderBy, direction, cursorValue, isBackward);
+        var decodedCursor = cursorService.DecodeCursor<UserSortField>(cursorValue);
+        var (whereClause, orderByClause) = CreateCursorClauses(order, decodedCursor);
         var companyClause = CreateCompanyClause(companyId);
+        var sizePlusOne = size + 1;
 
         var sql = $"""
                    SELECT u."Id", u."CompanyId", u."Name", u."Email", u."PhoneNumber", u."TwitterHandle", 
@@ -40,106 +31,136 @@ public class UsersCursorService(PaginationDbContext context, CursorService curso
                    {companyClause}
                    {whereClause}
                    {orderByClause}
-                   LIMIT @size
+                   LIMIT @SizePlusOne
                    """;
 
         var parameters = new DynamicParameters();
         if (companyId.HasValue)
         {
-            parameters.Add("companyid", companyId.Value);
+            parameters.Add("CompanyId", companyId.Value);
         }
 
-        parameters.Add("size", size + 1); // Fetch one extra
-
-        if (!string.IsNullOrEmpty(cursorValue))
+        if (decodedCursor is not null)
         {
-            var decodedCursor = cursorService.DecodeCursor(cursorValue);
-            if (decodedCursor != null)
-            {
-                parameters.Add("cursorvalue", decodedCursor.Value);
-                parameters.Add("cursorid", decodedCursor.Id);
-            }
+            parameters.Add("CursorId", decodedCursor.Id);
+            parameters.Add("CursorValue", decodedCursor.Value);
         }
+
+        parameters.Add("SizePlusOne", sizePlusOne);
 
         var connection = context.Database.GetDbConnection();
-
-
         var command = new CommandDefinition(sql, parameters, commandTimeout: 30, cancellationToken: cancellationToken);
-        var results = await connection.QueryAsync<User>(command);
-        var resultsList = results.ToList();
+        var allResults = await connection.QueryAsync<User>(command);
+        var allResultsList = allResults.ToArray();
 
-        // Determine if there are more pages
-        var hasMorePages = resultsList.Count > size;
+        var hasMorePages = allResultsList.Length > size;
+        var results = allResultsList
+            .Take(size)
+            .ToArray();
+
+        var firstPage = decodedCursor is null;
+        var pages = new List<CursorPage>();
+        if (!firstPage)
+        {
+            pages.Add(new CursorPage("<<", string.Empty));
+        }
+
+        if (!firstPage)
+        {
+            var previousSortValue = decodedCursor!.Value;
+            var previousDirection = decodedCursor.Direction;
+            var previousId = decodedCursor.Id;
+
+            var cursorData = cursorService.EncodeCursor(decodedCursor.OrderBy, previousSortValue, previousDirection, previousId);
+            pages.Add(new CursorPage("<", cursorData));
+        }
+
         if (hasMorePages)
         {
-            resultsList.RemoveAt(resultsList.Count - 1); // Remove the extra record
+            var lastResult = allResultsList.LastOrDefault();
+            if (lastResult is not null)
+            {
+                var column = order?.OrderBy ?? decodedCursor?.OrderBy ?? UserSortField.CreatedAt;
+                var direction = order?.Direction ?? decodedCursor?.Direction ?? OrderDirection.Descending;
+                var lastSortValue = GetUserSortValue(lastResult, column);
+                var cursorData = cursorService.EncodeCursor(column, lastSortValue, direction, lastResult.Id);
+                pages.Add(new CursorPage(">", cursorData));
+            }
         }
-
-        // For backward pagination, reverse the results to maintain correct order
-        if (isBackward)
-        {
-            resultsList.Reverse();
-        }
-
-        // Create cursors based on navigation direction
-        var nextCursor = GetNextCursor(resultsList, hasMorePages, orderBy, isBackward);
-        var previousCursor = GetPreviousCursor(resultsList, cursorValue, orderBy, isBackward);
-        var firstPageCursor = cursorService.EncodeFirstPageCursor(orderBy, direction);
-        var lastPageCursor = cursorService.EncodeLastPageCursor(orderBy, direction);
 
         return new CursorPaginationResponse<User>
         {
-            Data = resultsList,
+            Data = results,
             Metadata = new CursorMetadata
             {
                 PageSize = size,
-                NextCursor = nextCursor,
-                PreviousCursor = previousCursor,
-                FirstPageCursor = firstPageCursor,
-                LastPageCursor = lastPageCursor
+                Pages = pages
             }
+        };
+    }
+
+    private object GetUserSortValue(User user, UserSortField orderBy)
+    {
+        return orderBy switch
+        {
+            UserSortField.CompanyId => user.CompanyId,
+            UserSortField.Name => user.Name,
+            UserSortField.Email => user.Email,
+            UserSortField.PhoneNumber => user.PhoneNumber ?? string.Empty,
+            UserSortField.TwitterHandle => user.TwitterHandle ?? string.Empty,
+            UserSortField.FacebookProfile => user.FacebookProfile ?? string.Empty,
+            UserSortField.WhatsAppNumber => user.WhatsAppNumber ?? string.Empty,
+            UserSortField.InstagramHandle => user.InstagramHandle ?? string.Empty,
+            UserSortField.BlueskyHandle => user.BlueskyHandle ?? string.Empty,
+            UserSortField.CreatedAt => user.CreatedAt.ToUnixTimeMilliseconds(),
+            UserSortField.UpdatedAt => (user.UpdatedAt ?? user.CreatedAt).ToUnixTimeMilliseconds(),
+            _ => user.CreatedAt.ToUnixTimeMilliseconds()
         };
     }
 
     private string CreateCompanyClause(long? companyId)
         => companyId.HasValue ? """ AND u."CompanyId" = @companyid """ : string.Empty;
 
-    private (string whereClause, string orderByClause) CreateCursorClauses(UserSortField orderBy, SortDirection direction, string? cursorValue, bool backward)
+    private (string whereClause, string orderByClause) CreateCursorClauses(Order<UserSortField>? order, CursorData<UserSortField>? cursor)
     {
-        var column = GetColumnName(orderBy);
-        var sortDirection = direction == SortDirection.Ascending ? "ASC" : "DESC";
-        var comparisonOperator = direction == SortDirection.Ascending ? ">" : "<";
-        var idComparisonOperator = ">";
-
-        // For backward pagination, reverse the comparison logic
-        if (backward)
+        if (cursor is not null)
         {
-            comparisonOperator = direction == SortDirection.Ascending ? "<" : ">";
-            idComparisonOperator = "<";
-            sortDirection = direction == SortDirection.Ascending ? "DESC" : "ASC";
+            var cursorColumn = GetColumnName(cursor.OrderBy);
+            var cursorColumnCast = GetCursorColumnCast(cursor.OrderBy);
+
+            var comparisonDirection = cursor.Direction == OrderDirection.Ascending ? "ASC" : "DESC";
+            var comparisonOperator = cursor.Direction == OrderDirection.Ascending ? ">=" : "<=";
+            var whereClause = $"""AND ({cursorColumn}, u."Id") {comparisonOperator} ({cursorColumnCast}, @CursorId)""";
+            var orderByClause = $"""ORDER BY {cursorColumn} {comparisonDirection}, u."Id" {comparisonDirection}""";
+
+            return (whereClause, orderByClause);
         }
 
-        var whereClause = string.Empty;
-        if (!string.IsNullOrEmpty(cursorValue))
+        if (order is not null)
         {
-            // Handle type-specific comparisons for cursor pagination
-            var cursorColumnCast = GetCursorColumnCast(orderBy);
-            whereClause = $"""AND (({column} {comparisonOperator} {cursorColumnCast}) OR ({column} = {cursorColumnCast} AND u."Id" {idComparisonOperator} @cursorid))""";
+            var orderBy = order.OrderBy;
+            var direction = order.Direction;
+
+            var column = GetColumnName(orderBy);
+            var sortDirection = direction == OrderDirection.Ascending ? "ASC" : "DESC";
+
+            var whereClause = string.Empty;
+            var orderByClause = $"""ORDER BY {column} {sortDirection}, u."Id" {sortDirection}""";
+
+            return (whereClause, orderByClause);
         }
 
-        var orderByClause = $"""ORDER BY {column} {sortDirection}, u."Id" {(backward ? "DESC" : "ASC")}""";
-
-        return (whereClause, orderByClause);
+        return (string.Empty, string.Empty);
     }
 
     private string GetCursorColumnCast(UserSortField orderBy)
     {
         return orderBy switch
         {
-            UserSortField.CreatedAt => "to_timestamp(@cursorvalue / 1000.0)",
-            UserSortField.UpdatedAt => "to_timestamp(@cursorvalue / 1000.0)", 
-            UserSortField.CompanyId => "@cursorvalue::bigint",
-            _ => "@cursorvalue" // For string fields, no cast needed
+            UserSortField.CreatedAt => "to_timestamp(@CursorValue)",
+            UserSortField.UpdatedAt => "to_timestamp(@CursorValue)",
+            UserSortField.CompanyId => "@CursorValue::bigint",
+            _ => "@CursorValue" // For string fields, no cast needed
         };
     }
 
@@ -160,25 +181,5 @@ public class UsersCursorService(PaginationDbContext context, CursorService curso
             UserSortField.UpdatedAt => """ COALESCE(u."UpdatedAt", u."CreatedAt") """,
             _ => """ u."CreatedAt" """ // Default fallback
         };
-    }
-
-    private string? GetNextCursor(List<User> results, bool hasMorePages, UserSortField orderBy, bool isBackward)
-    {
-        if (!hasMorePages || results.Count == 0) return null;
-
-        // For backward navigation, "next" means continuing backward
-        return isBackward
-            ? cursorService.EncodeUserCursor(results.First(), orderBy, true)
-            : cursorService.EncodeUserCursor(results.Last(), orderBy, false);
-    }
-
-    private string? GetPreviousCursor(List<User> results, string? currentCursor, UserSortField orderBy, bool isBackward)
-    {
-        if (string.IsNullOrEmpty(currentCursor) || results.Count == 0) return null;
-
-        // For backward navigation, "previous" means continuing forward
-        return isBackward
-            ? cursorService.EncodeUserCursor(results.Last(), orderBy, false)
-            : cursorService.EncodeUserCursor(results.First(), orderBy, true);
     }
 }

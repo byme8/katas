@@ -10,10 +10,6 @@ public class CursorPaginationRequest<TOrderBy>
     public int Size { get; set; }
     
     public string? Cursor { get; set; }
-    
-    public TOrderBy OrderBy { get; set; } = default!;
-    
-    public SortDirection Direction { get; set; } = SortDirection.Descending;
-    
-    public bool Backward { get; set; } = false;
+
+    public Order<TOrderBy>? Order { get; set; }
 }

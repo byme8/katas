@@ -88,3 +88,28 @@ Content-Type: application/json
   "orderBy": "NAME",
   "direction": "ASC"
 }
+
+###
+# Cursor-based pagination for all users (first page)
+POST {{Host}}/api/users/cursor
+Accept: application/json
+Content-Type: application/json
+
+{
+  "size": 5,
+  "order": {
+    "orderBy": "CREATED_AT",
+    "direction": "DESC"
+  }
+}
+
+###
+# Cursor-based pagination for all users (with cursor)
+POST {{Host}}/api/users/cursor
+Accept: application/json
+Content-Type: application/json
+
+{
+  "size": 5,
+  "cursor": "lM4BkTcgCtMAAAAAaE4RLAI="
+}

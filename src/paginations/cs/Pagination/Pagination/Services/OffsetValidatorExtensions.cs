@@ -22,7 +22,7 @@ public static class OffsetValidatorExtensions
             list.Add("OrderBy cannot be None.");
         }
 
-        if (request.Direction == SortDirection.None)
+        if (request.Direction == OrderDirection.None)
         {
             list.Add("Direction cannot be None.");
         }

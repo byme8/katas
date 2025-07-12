@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NodaTime;
 using Pagination.Data.Entities;
 
 namespace Pagination.Data;
@@ -16,6 +18,30 @@ public class PaginationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // Configure NodaTime value converters
+        var instantConverter = new InstantToDateTimeConverter();
+        var nullableInstantConverter = new NullableInstantToDateTimeConverter();
+
+        modelBuilder.Entity<Company>()
+            .Property(e => e.CreatedAt)
+            .HasConversion(instantConverter);
+        modelBuilder.Entity<Company>()
+            .Property(e => e.UpdatedAt)
+            .HasConversion(nullableInstantConverter);
+        modelBuilder.Entity<Company>()
+            .Property(e => e.DeletedAt)
+            .HasConversion(nullableInstantConverter);
+
+        modelBuilder.Entity<User>()
+            .Property(e => e.CreatedAt)
+            .HasConversion(instantConverter);
+        modelBuilder.Entity<User>()
+            .Property(e => e.UpdatedAt)
+            .HasConversion(nullableInstantConverter);
+        modelBuilder.Entity<User>()
+            .Property(e => e.DeletedAt)
+            .HasConversion(nullableInstantConverter);
+
         // Company entity configuration
         modelBuilder.Entity<Company>(entity =>
         {
@@ -24,7 +50,7 @@ public class PaginationDbContext : DbContext
             entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
             entity.HasIndex(e => e.Email);
             entity.HasIndex(e => new { e.IsDeleted, e.DeletedAt });
-            
+
             // Soft delete query filter
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
@@ -41,16 +67,16 @@ public class PaginationDbContext : DbContext
             entity.Property(e => e.WhatsAppNumber).HasMaxLength(50);
             entity.Property(e => e.InstagramHandle).HasMaxLength(100);
             entity.Property(e => e.BlueskyHandle).HasMaxLength(100);
-            
+
             entity.HasIndex(e => e.CompanyId);
             entity.HasIndex(e => e.Email);
-            
+
             // Social media field indexes for search/lookup
             entity.HasIndex(e => e.PhoneNumber);
             entity.HasIndex(e => e.TwitterHandle);
             entity.HasIndex(e => e.InstagramHandle);
             entity.HasIndex(e => e.BlueskyHandle);
-            
+
             // Optimized indexes for single-column sorting with soft delete
             entity.HasIndex(e => new { e.IsDeleted, e.CreatedAt, e.Id })
                 .HasDatabaseName("IX_Users_IsDeleted_CreatedAt_Id");
@@ -58,16 +84,16 @@ public class PaginationDbContext : DbContext
                 .HasDatabaseName("IX_Users_IsDeleted_UpdatedAt_Id");
             entity.HasIndex(e => new { e.IsDeleted, e.CompanyId, e.Id })
                 .HasDatabaseName("IX_Users_IsDeleted_CompanyId_Id");
-            
+
             // For soft delete cleanup queries
             entity.HasIndex(e => new { e.IsDeleted, e.DeletedAt });
-            
+
             // Relationship
             entity.HasOne(e => e.Company)
                 .WithMany(c => c.Users)
                 .HasForeignKey(e => e.CompanyId)
                 .OnDelete(DeleteBehavior.Cascade);
-            
+
             // Soft delete query filter
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
@@ -84,16 +110,28 @@ public class PaginationDbContext : DbContext
         var entries = ChangeTracker.Entries<Entity>()
             .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
 
+        var now = SystemClock.Instance.GetCurrentInstant();
+
         foreach (var entry in entries)
         {
             if (entry.State == EntityState.Added)
             {
-                entry.Entity.CreatedAt = DateTime.UtcNow;
+                entry.Entity.CreatedAt = now;
             }
             else if (entry.State == EntityState.Modified)
             {
-                entry.Entity.UpdatedAt = DateTime.UtcNow;
+                entry.Entity.UpdatedAt = now;
             }
         }
     }
 }
+
+public class InstantToDateTimeConverter()
+    : ValueConverter<Instant, DateTime>(
+        instant => instant.ToDateTimeUtc(),
+        dateTime => Instant.FromDateTimeUtc(dateTime));
+
+public class NullableInstantToDateTimeConverter()
+    : ValueConverter<Instant?, DateTime?>(
+        instant => instant.HasValue ? instant.Value.ToDateTimeUtc() : null,
+        dateTime => dateTime.HasValue ? Instant.FromDateTimeUtc(dateTime.Value) : null);

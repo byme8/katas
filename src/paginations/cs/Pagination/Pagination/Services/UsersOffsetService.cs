@@ -3,6 +3,7 @@ using System.Data;
 using Apparatus.AOT.Reflection;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 using Pagination.Data;
 using Pagination.Data.Entities;
 
@@ -107,7 +108,7 @@ public class UsersOffsetService(PaginationDbContext context, ILogger<UsersOffset
     private static string CreateCountOverClause(OffsetPaginationRequest<UserSortField> offset)
         => !offset.SkipCount ? ", COUNT(*) OVER() as TotalCount" : string.Empty;
 
-    private string CreateOrdeByClause(UserSortField orderBy, SortDirection direction)
+    private string CreateOrdeByClause(UserSortField orderBy, OrderDirection direction)
     {
         var column = orderBy switch
         {
@@ -127,8 +128,8 @@ public class UsersOffsetService(PaginationDbContext context, ILogger<UsersOffset
 
         var sortDirection = direction switch
         {
-            SortDirection.Ascending => "ASC",
-            SortDirection.Descending => "DESC",
+            OrderDirection.Ascending => "ASC",
+            OrderDirection.Descending => "DESC",
             _ => "DESC" // Default fallback
         };
 
@@ -148,9 +149,9 @@ internal class UserWithCount
     public string? WhatsAppNumber { get; set; }
     public string? InstagramHandle { get; set; }
     public string? BlueskyHandle { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public DateTime? DeletedAt { get; set; }
+    public Instant CreatedAt { get; set; }
+    public Instant? UpdatedAt { get; set; }
+    public Instant? DeletedAt { get; set; }
     public bool IsDeleted { get; set; }
     public long TotalCount { get; set; }
 }

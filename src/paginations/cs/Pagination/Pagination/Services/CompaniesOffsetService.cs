@@ -3,6 +3,7 @@ using System.Data;
 using Apparatus.AOT.Reflection;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 using Pagination.Data;
 using Pagination.Data.Entities;
 
@@ -82,7 +83,7 @@ public class CompaniesOffsetService(PaginationDbContext context, ILogger<Compani
     private static string CreateCountOverClause(OffsetPaginationRequest<CompanySortField> offset)
         => !offset.SkipCount ? ", COUNT(*) OVER() as TotalCount" : string.Empty;
 
-    private string CreateOrderByClause(CompanySortField orderBy, SortDirection direction)
+    private string CreateOrderByClause(CompanySortField orderBy, OrderDirection direction)
     {
         var column = orderBy switch
         {
@@ -96,8 +97,8 @@ public class CompaniesOffsetService(PaginationDbContext context, ILogger<Compani
 
         var sortDirection = direction switch
         {
-            SortDirection.Ascending => "ASC",
-            SortDirection.Descending => "DESC",
+            OrderDirection.Ascending => "ASC",
+            OrderDirection.Descending => "DESC",
             _ => "DESC" // Default fallback
         };
 
@@ -110,9 +111,9 @@ internal class CompanyWithCount
     public long Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public DateTime? DeletedAt { get; set; }
+    public Instant CreatedAt { get; set; }
+    public Instant? UpdatedAt { get; set; }
+    public Instant? DeletedAt { get; set; }
     public bool IsDeleted { get; set; }
     public long TotalCount { get; set; }
 }
